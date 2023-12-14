@@ -43,7 +43,7 @@ void Service::onInit()
 }
 
 // 服务收到消息回调
-void Service::onMessage(shared_ptr<BaseMsg>)
+void Service::onMessage(shared_ptr<BaseMsg> message)
 {
     
 }

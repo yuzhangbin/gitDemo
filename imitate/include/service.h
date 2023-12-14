@@ -24,7 +24,7 @@ class Service
         void pushMsg(shared_ptr<BaseMsg> message);
         shared_ptr<BaseMsg> popMsg();
         void onInit();
-        void onMessage(shared_ptr<BaseMsg>);
+        void onMessage(shared_ptr<BaseMsg> message);
         void onExit();
         bool processMsg();
         void processMsgs(int max);

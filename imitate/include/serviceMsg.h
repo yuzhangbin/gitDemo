@@ -6,10 +6,10 @@
 
 using namespace std;
 
-class SerciceMsg : public BaseMsg 
+class ServiceMsg : public BaseMsg 
 {
     public:
-        uint32_t souce;
+        uint32_t source;
         shared_ptr<char> buff;
         size_t size;
 };

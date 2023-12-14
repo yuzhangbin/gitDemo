@@ -6,6 +6,7 @@
 #include <unordered_map>
 #include "worker.h"
 #include "service.h"
+#include "serviceMsg.h"
 
 using namespace std;
 
@@ -41,6 +42,8 @@ class Sunnet
         void send(uint32_t serviceID, shared_ptr<BaseMsg> msg);
         shared_ptr<Service> popGlobalQueue();
         void pushGlobalQueue(shared_ptr<Service> svr);
+    public:
+        shared_ptr<BaseMsg> makeMsg(uint32_t source, char *buff, int len); // 创建消息，这个仅做测试使用
 };
 
 #endif
