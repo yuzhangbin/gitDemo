@@ -14,6 +14,8 @@ Sunnet::~Sunnet()
 {
     pthread_rwlock_destroy(&servicesLock);
     spinlock_destroy(&globalSpinLock);
+    pthread_mutex_destroy(&sleepMtx);
+    pthread_cond_destroy(&sleepCond);
 }
 
 void Sunnet::start()
@@ -21,7 +23,10 @@ void Sunnet::start()
     cout<<"sunnet start"<<endl;
     pthread_rwlock_init(&servicesLock, NULL);
     spinlock_init(&globalSpinLock);
+    pthread_mutex_init(&sleepMtx, NULL);
+    pthread_cond_init(&sleepCond, NULL);
     this->startWorker();
+    this->startSocket();
 }
 
 void Sunnet::wait()
@@ -56,6 +61,13 @@ void Sunnet::startWorker()
         this->workers.push_back(worker);
         this->workerThreads.push_back(tw);
     }
+}
+
+void Sunnet::startSocket()
+{
+    socketWorker = new SocketWorker();
+    socketWorker->init();
+    socketWorkerThread = new thread(*socketWorker);
 }
 
 uint32_t Sunnet::newService(shared_ptr<string> type)
@@ -151,6 +163,11 @@ void Sunnet::send(uint32_t serviceID, shared_ptr<BaseMsg> msg)
         }
     }
     spinlock_unlock(&svr->inGlobalLock);
+    if(inGlobal)
+    {
+        // 插入全局消息队列唤醒线程
+        this->checkAndWeakUp();
+    }
 }
 
 shared_ptr<BaseMsg> Sunnet::makeMsg(uint32_t source, char *buff, int len)
@@ -159,7 +176,29 @@ shared_ptr<BaseMsg> Sunnet::makeMsg(uint32_t source, char *buff, int len)
     msg->type = BaseMsg::TYPE::SERVICE;
     msg->source = source;
     // buff是通过new出来的，不要再被其它堆对象引用，不然导致智能指针的引用计数错误
-    msg->buff = make_shared<char>(buff);
+    msg->buff = shared_ptr<char>(buff);
     msg->size = len;
     return msg;
+}
+
+void Sunnet::checkAndWeakUp()
+{
+    if(sleepCount == 0)
+    {
+        return ;
+    }
+    if(WORKER_NUM - sleepCount <= globalLen)
+    {
+        cout << "wake up" << endl;
+        pthread_cond_signal(&sleepCond);
+    }
+}
+
+void Sunnet::workerWait()
+{
+    pthread_mutex_lock(&sleepMtx);
+    sleepCount++;
+    pthread_cond_wait(&sleepCond, &sleepMtx); //进入休眠解开上面锁住的sleepMtx，阻塞在这里，被唤醒时，对sleepMtx加锁，继续流程
+    sleepCount--;
+    pthread_mutex_unlock(&sleepMtx);
 }

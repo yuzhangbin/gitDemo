@@ -4,9 +4,12 @@
 #include <stdlib.h>
 #include <memory>
 #include <queue>
+#include <iostream>
 
 #include "baseMsg.h"
 #include "spinLock.h"
+#include "serviceMsg.h"
+#include "sunnet.h"
 
 using namespace std;
 

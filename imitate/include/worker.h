@@ -2,6 +2,9 @@
 #define __WORKER_H__
 
 #include "sunnet.h"
+#include "service.h"
+
+class Service;
 
 class Worker
 {

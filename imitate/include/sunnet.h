@@ -7,8 +7,12 @@
 #include "worker.h"
 #include "service.h"
 #include "serviceMsg.h"
+#include "socketWorker.h"
 
 using namespace std;
+
+class Worker;
+class SockerWorker;
 
 class Sunnet
 {
@@ -22,9 +26,13 @@ class Sunnet
         vector<Worker *> workers;
         vector<thread *> workerThreads;
     private:
+        SocketWorker *socketWorker;
+        thread *socketWorkerThread;
+    private:
         Sunnet();
         ~Sunnet();
         void startWorker();
+        void startSocket();
     public:
         unordered_map<uint32_t, shared_ptr<Service>> services;
         uint32_t maxServiceID = 0;
@@ -44,6 +52,13 @@ class Sunnet
         void pushGlobalQueue(shared_ptr<Service> svr);
     public:
         shared_ptr<BaseMsg> makeMsg(uint32_t source, char *buff, int len); // 创建消息，这个仅做测试使用
+    private:
+        pthread_mutex_t sleepMtx;
+        pthread_cond_t sleepCond;
+        int sleepCount = 0; // 记录休眠工作线程数量
+    public:
+        void checkAndWeakUp();
+        void workerWait();
 };
 
 #endif

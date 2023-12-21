@@ -45,7 +45,19 @@ void Service::onInit()
 // 服务收到消息回调
 void Service::onMessage(shared_ptr<BaseMsg> message)
 {
-    
+    // 测试使用
+    if(message->type == BaseMsg::TYPE::SERVICE)
+    {
+        auto msg = dynamic_pointer_cast<ServiceMsg>(message);
+        cout<<id<<"  "<<msg->buff<<endl;
+        Sunnet *sunnetInstance = Sunnet::instance();
+        auto msgRet = sunnetInstance->makeMsg(id, new char[ 9999999] { 'p', 'i', 'n', 'g', '\0' }, 9999999);
+        sunnetInstance->send(msg->source, msgRet);
+    }
+    else
+    {
+        cout<<id<<"zan shi wei ding yi"<<endl;
+    }
 }
 
 // 服务退出

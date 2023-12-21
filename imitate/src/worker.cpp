@@ -7,14 +7,19 @@ using namespace std;
 void Worker::operator()()
 {
     Sunnet *sunnetInstance = Sunnet::instance();
+    cout << "working id:" << id << endl;
     while (true)
     {
-        cout << "working id:" << id << endl;
+        // cout << "working id:" << id << endl;
         shared_ptr<Service> svr = sunnetInstance->popGlobalQueue();
         if(!svr)
         {
-            cout<<"quan ju fu wu dui lie li mian mei you fu wu"<<endl;
-            usleep(100000);
+            // cout<<"quan ju fu wu dui lie li mian mei you fu wu"<<endl;
+            // usleep(100000);
+            // 休眠线程，等到有消息的时候再唤醒
+            // cout << "zusezaizhelima1" << endl;
+            sunnetInstance->workerWait();
+            // cout << "zusezaizhelima2" << endl;
         }
         else
         {
