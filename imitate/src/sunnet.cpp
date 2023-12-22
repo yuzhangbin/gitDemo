@@ -16,6 +16,7 @@ Sunnet::~Sunnet()
     spinlock_destroy(&globalSpinLock);
     pthread_mutex_destroy(&sleepMtx);
     pthread_cond_destroy(&sleepCond);
+    pthread_rwlock_destroy(&connsLock);
 }
 
 void Sunnet::start()
@@ -25,6 +26,7 @@ void Sunnet::start()
     spinlock_init(&globalSpinLock);
     pthread_mutex_init(&sleepMtx, NULL);
     pthread_cond_init(&sleepCond, NULL);
+    pthread_rwlock_init(&connsLock, NULL);
     this->startWorker();
     this->startSocket();
 }
@@ -202,3 +204,44 @@ void Sunnet::workerWait()
     sleepCount--;
     pthread_mutex_unlock(&sleepMtx);
 }
+
+int Sunnet::addConn(int fd, uint32_t id, Conn::TYPE type)
+{
+    auto conn = make_shared<Conn>();
+    conn->fd = fd;
+    conn->serviceId = id;
+    conn->type = type;
+    pthread_rwlock_wrlock(&connsLock);
+    {
+        conns.emplace(conn->fd, conn);
+    }
+    pthread_rwlock_unlock(&connsLock);
+    return fd;
+}
+
+shared_ptr<Conn> Sunnet::getConn(int fd)
+{
+    shared_ptr<Conn> conn = nullptr;
+    pthread_rwlock_rdlock(&connsLock);
+    {
+        unordered_map<uint32_t, shared_ptr<Conn>>::iterator itr = conns.find(fd);
+        if(itr != conns.end())
+        {
+            conn = itr->second;
+        }
+    }
+    pthread_rwlock_unlock(&connsLock);
+    return conn;
+}
+
+bool Sunnet::removeConn(int fd)
+{
+    int result = 1;
+    pthread_rwlock_wrlock(&connsLock);
+    {
+        result = conns.erase(fd);
+    }
+    pthread_rwlock_unlock(&connsLock);
+    return result == 1;
+}
+

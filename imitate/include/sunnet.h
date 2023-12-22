@@ -8,6 +8,7 @@
 #include "service.h"
 #include "serviceMsg.h"
 #include "socketWorker.h"
+#include "conn.h"
 
 using namespace std;
 
@@ -59,6 +60,13 @@ class Sunnet
     public:
         void checkAndWeakUp();
         void workerWait();
+    public:
+        int addConn(int fd, uint32_t id, Conn::TYPE type);
+        shared_ptr<Conn> getConn(int fd);
+        bool removeConn(int fd);
+    private:
+        unordered_map<uint32_t, shared_ptr<Conn>> conns;
+        pthread_rwlock_t connsLock;
 };
 
 #endif
