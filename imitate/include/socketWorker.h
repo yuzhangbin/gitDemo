@@ -1,7 +1,11 @@
 #ifndef __SOCKETWORKER_H__
 #define __SOCKETWORKER_H__
 
-#include "socket_kqueue.h"
+#include <iostream>
+
+#include "socket_epoll.h"
+
+using namespace std;
 
 class SocketWorker
 {
@@ -10,7 +14,9 @@ class SocketWorker
         void init();
         void operator()();
     private:
-        poll_fd epollFd;
+        shared_ptr<epoller> efd;
+    private:
+        void addEvent(int fd);
 };
 
 #endif
